@@ -32,7 +32,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+FATFS fs;
+FIL fil;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -95,7 +96,12 @@ int main(void)
   MX_USART1_UART_Init();
   MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_Delay(500);
+  f_mount(&fs, "", 0);
+  f_open(&fil, "write.pdf", FA_OPEN_ALWAYS | FA_WRITE | FA_READ);
+  f_lseek(&fil, fil.fsize);
+  f_puts("Hello from Nizar\n", &fil);
+  f_close(&fil);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -231,14 +237,14 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(SD_CS_PORT_GPIO_Port, SD_CS_PORT_Pin, GPIO_PIN_SET);
 
-  /*Configure GPIO pin : PA4 */
-  GPIO_InitStruct.Pin = GPIO_PIN_4;
+  /*Configure GPIO pin : SD_CS_PORT_Pin */
+  GPIO_InitStruct.Pin = SD_CS_PORT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(SD_CS_PORT_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
