@@ -1,3 +1,10 @@
-../Core/Src/aplication.c:17:6:initDisplay	3
-../Core/Src/aplication.c:31:6:updateDisplay	2
-../Core/Src/aplication.c:39:6:updateDisplayVelocidade	3
+../Core/Src/aplication.c:23:6:initDisplay	5
+../Core/Src/aplication.c:43:6:updateDisplay	4
+../Core/Src/aplication.c:53:6:updateDisplayNumeroSatelites	1
+../Core/Src/aplication.c:59:6:updateDisplayHora	1
+../Core/Src/aplication.c:78:6:updateDisplayVelocidade	3
+../Core/Src/aplication.c:115:7:converte4Bytes2float	3
+../Core/Src/aplication.c:126:9:converte2Bytes2uint8	1
+../Core/Src/aplication.c:132:10:converte4Bytes2uint16	1
+../Core/Src/aplication.c:138:6:decodeNMEA	20
+../Core/Src/aplication.c:244:6:HAL_UART_RxCpltCallback	4

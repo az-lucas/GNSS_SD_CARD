@@ -1,3 +1,10 @@
-../Core/Src/aplication.c:17:6:initDisplay	16	static
-../Core/Src/aplication.c:31:6:updateDisplay	16	static
-../Core/Src/aplication.c:39:6:updateDisplayVelocidade	24	static
+../Core/Src/aplication.c:23:6:initDisplay	16	static
+../Core/Src/aplication.c:43:6:updateDisplay	16	static
+../Core/Src/aplication.c:53:6:updateDisplayNumeroSatelites	16	static
+../Core/Src/aplication.c:59:6:updateDisplayHora	16	static
+../Core/Src/aplication.c:78:6:updateDisplayVelocidade	24	static
+../Core/Src/aplication.c:115:7:converte4Bytes2float	16	static
+../Core/Src/aplication.c:126:9:converte2Bytes2uint8	16	static
+../Core/Src/aplication.c:132:10:converte4Bytes2uint16	16	static
+../Core/Src/aplication.c:138:6:decodeNMEA	24	static
+../Core/Src/aplication.c:244:6:HAL_UART_RxCpltCallback	24	static

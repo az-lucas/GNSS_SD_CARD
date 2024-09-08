@@ -9,3 +9,6 @@ https://www.youtube.com/watch?v=aqSNz26Cuio&ab_channel=MicroPetabyNizarMohideen
 Display OLED
 https://www.micropeta.com/video19
 https://www.youtube.com/watch?v=Mt6U30Yxrr8&ab_channel=MicroPetabyNizarMohideen
+
+UART GNSS
+https://controllerstech.com/stm32-uart-3-receive-data-in-blocking-interrupt-mode/

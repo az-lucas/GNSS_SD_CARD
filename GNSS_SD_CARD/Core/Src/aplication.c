@@ -13,37 +13,75 @@
 
 
 displayConfig Display;
+GNSS gnss = {.numeroSatelitesStr[0] = '0', .numeroSatelitesStr[1] = '0',
+		.data={	.horaUTCStr[0] = '0',	.horaUTCStr[1] = '0',
+				.minutoStr[0] = '0',	.minutoStr[1] = '0',
+				.segundoStr[0] = '0',	.segundoStr[1] = '0'}};
+UART_HandleTypeDef huart1;
+
 
 void initDisplay(displayConfig *disp){
 
 	if(disp->configurado != NONE){
 		SSD1306_Init();
 		if(disp->configurado == VELOCIDADE){
-			SSD1306_GotoXY (10,0);
+			SSD1306_GotoXY (0,0);
 			SSD1306_Puts ("Velocidade", &Font_11x18, 1);
 			SSD1306_GotoXY (80, 36);
 			SSD1306_Puts ("km/h", &Font_11x18, 1);
-			SSD1306_UpdateScreen();
+
 		}else if(disp->configurado == INFO){
 
+		}else if(disp->configurado == HORA){
+			SSD1306_GotoXY (0,0);
+			SSD1306_Puts ("Hora", &Font_11x18, 1);
 		}
+		SSD1306_UpdateScreen();
 	}
 }
 
-void updateDisplay(displayConfig *disp){
+void updateDisplay(displayConfig *disp, GNSS *gn){
 	if(disp->configurado == VELOCIDADE){
-		updateDisplayVelocidade(disp);
+		updateDisplayVelocidade(disp, gn);
 	}else if(disp->configurado == INFO){
 
+	}else if(disp->configurado == HORA){
+		updateDisplayHora(disp, gn);
 	}
 }
 
-void updateDisplayVelocidade(displayConfig *disp){
-	char _snum[4];
-	itoa(disp->velocidade, _snum, 10);
+void updateDisplayNumeroSatelites(displayConfig *disp, GNSS *gn){
+	SSD1306_GotoXY (113, 0);
+	SSD1306_Putc(gn->numeroSatelitesStr[0], &Font_7x10, 1);
+	SSD1306_Putc(gn->numeroSatelitesStr[1], &Font_7x10, 1);
+}
 
+void updateDisplayHora(displayConfig *disp, GNSS *gn){
+
+	updateDisplayNumeroSatelites(disp, gn);
+
+	SSD1306_GotoXY (0, 30);
+	SSD1306_Putc(gn->data.horaUTCStr[0], &Font_16x26, 1);
+	SSD1306_Putc(gn->data.horaUTCStr[1], &Font_16x26, 1);
+	SSD1306_Putc(':', &Font_11x18, 1);
+	SSD1306_Putc(gn->data.minutoStr[0], &Font_16x26, 1);
+	SSD1306_Putc(gn->data.minutoStr[1], &Font_16x26, 1);
+	SSD1306_Putc(':', &Font_11x18, 1);
+	SSD1306_Putc(gn->data.segundoStr[0], &Font_16x26, 1);
+	SSD1306_Putc(gn->data.segundoStr[1], &Font_16x26, 1);
+	SSD1306_UpdateScreen();
+}
+
+
+
+
+void updateDisplayVelocidade(displayConfig *disp, GNSS *gn){
+	char _snum[4];
+
+	updateDisplayNumeroSatelites(disp, gn);
+	itoa(gn->velocidade.velocidade8bits, _snum, 10);
 	SSD1306_GotoXY (25, 30);
-	if(disp->velocidade < 10) {// 1 DIGIT
+	if(gn->velocidade.velocidade8bits < 10) {// 1 DIGIT
 
 		_snum[3] = 0;
 		_snum[2] = _snum[0];
@@ -51,14 +89,14 @@ void updateDisplayVelocidade(displayConfig *disp){
 		_snum[0] = ' ';
 
 	}
-	else if (disp->velocidade < 100 ) {// 2 DIGITS
+	else if (gn->velocidade.velocidade8bits < 100 ) {// 2 DIGITS
 		_snum[3] = 0;
 		_snum[2] = _snum[1];
 		_snum[1] = _snum[0];
 		_snum[0] = ' ';
 
 	}
-	else if (disp->velocidade < 1000 ) {// 3 DIGITS
+	else if (gn->velocidade.velocidade8bits < 1000 ) {// 3 DIGITS
 		_snum[3] = 0;
 		_snum[2] = _snum[2];
 		_snum[1] = _snum[1];
@@ -71,5 +109,150 @@ void updateDisplayVelocidade(displayConfig *disp){
 
 	SSD1306_Puts (_snum, &Font_16x26, 1);
 	SSD1306_UpdateScreen();
+
+}
+
+float converte4Bytes2float(uint8_t *str){
+
+	if(*(str+1) == '.'){//x.xx
+		return (((*(str+3)-'0')+10*((*(str+2)-'0'))+100*((*(str)-'0')))/100.0);
+	}else if(*(str+2) == '.'){//xx.x
+		return (((*(str+3)-'0')+10*((*(str+1)-'0'))+100*((*(str)-'0')))/10.0);
+	}else{//xxx.
+		return (((*(str+2)-'0')+10*((*(str+1)-'0'))+100*((*(str)-'0'))));
+	}
+}
+
+uint8_t converte2Bytes2uint8(uint8_t *str){
+
+	return ((*str)-'0')*10+(*(str+1)-'0');
+
+}
+
+uint16_t converte4Bytes2uint16(uint8_t *str){
+
+	return ((*str)-'0')*1000+(*(str+1)-'0')*100+(*(str+2)-'0')*10+(*(str+3)-'0');
+
+}
+
+void decodeNMEA(uint8_t *str, GNSS *gn){
+	uint8_t *p;
+	uint8_t contVirgulas = 0;
+
+
+//GNZDA OK -> data e hora
+//GPTXT
+//GNGGA OK -> hora e numero de satelites
+//BDGSA
+//GPGSV
+//GNRMC
+//GNVTG OK -> velocidade
+//GNGLL
+//GPGSA
+//BDGSV
+	if(str[0] == '$'){
+		if(str[1] == 'G'){//G
+			if(str[2] == 'N'){//GN
+				if(str[3] == 'V'){//GNV
+					if(str[4] == 'T'){//GNVT
+						if(str[5] == 'G'){//GNVTG
+							if(str[6] == ','){//GNVTG
+								p = &str[7];
+								while(contVirgulas < 6){// velocidade
+									if(*p == ','){
+										contVirgulas++;
+									}
+									p++;
+								}
+								gn->velocidade.velocidadeSTR[0] = *p++;
+								gn->velocidade.velocidadeSTR[1] = *p++;
+								gn->velocidade.velocidadeSTR[2] = *p++;
+								gn->velocidade.velocidadeSTR[3] = *p++;
+								gn->velocidade.velocidadeFloat = converte4Bytes2float(gn->velocidade.velocidadeSTR);
+
+
+							}
+						}
+					}
+				}else if(str[3] == 'Z'){//GNZ
+					if(str[4] == 'D'){//GNZD
+						if(str[5] == 'A'){//GNZDA
+							if(str[6] == ','){//GNZDA
+								p = &str[7];
+
+								gn->data.horaUTCStr[0] = *p++;
+								gn->data.horaUTCStr[1] = *p++;
+								gn->data.minutoStr[0] = *p++;
+								gn->data.minutoStr[1] = *p++;
+								gn->data.segundoStr[0] = *p++;
+								gn->data.segundoStr[1] = *p++;
+
+								/*
+								gn->data.horaUTC = converte2Bytes2uint8(p);
+								p++;p++;
+								gn->data.minuto = converte2Bytes2uint8(p);
+								p++;p++;
+								gn->data.segundo = converte2Bytes2uint8(p);
+								p++;p++;
+								p++;p++;p++;p++;p++;
+								gn->data.dia = converte2Bytes2uint8(p);
+								p++;p++;p++;
+								gn->data.mes = converte2Bytes2uint8(p);
+								p++;p++;p++;
+								gn->data.ano = converte4Bytes2uint16(p);
+								*/
+							}
+						}
+					}
+				}else if(str[3] == 'G'){//GNG
+					if(str[4] == 'G'){//GNGG
+						if(str[5] == 'A'){//GNGGA
+							if(str[6] == ','){//GNGGA
+								p = &str[7];
+								gn->data.horaUTCStr[0] = *p++;
+								gn->data.horaUTCStr[1] = *p++;
+								gn->data.minutoStr[0] = *p++;
+								gn->data.minutoStr[1] = *p++;
+								gn->data.segundoStr[0] = *p++;
+								gn->data.segundoStr[1] = *p++;
+
+								while(contVirgulas < 6){// numero de satelites
+									if(*p == ','){
+										contVirgulas++;
+									}
+									p++;
+								}
+								gn->numeroSatelitesStr[0] = *p++;
+								gn->numeroSatelitesStr[1] = *p++;
+
+								//TODO: altitude
+
+
+
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	str[0] = 0;// ja foi lido
+
+
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+
+	HAL_UART_Receive_IT(&huart1, gnss.temp, 1);
+	gnss.RxDataSerial[gnss.indy][gnss.indx] = gnss.temp[0];
+	gnss.indx++;
+
+	if (gnss.indx >= 100 || gnss.temp[0] == '\n'){
+		//decodeNMEA(&gnss.RxDataSerial[gnss.indy][0], &gnss);
+
+		gnss.indx = 0;
+		gnss.indy++;
+		if(gnss.indy >= 13)gnss.indy = 0;
+	}
 
 }
