@@ -69,6 +69,8 @@ float converte4Bytes2float(uint8_t *str);
 uint8_t converte2Bytes2uint8(uint8_t *str);
 uint16_t converte4Bytes2uint16(uint8_t *str);
 
+void GravaNMEASDCard(uint8_t *str);
+
 
 
 #endif /* INC_APLICATION_H_ */

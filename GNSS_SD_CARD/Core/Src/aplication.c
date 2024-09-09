@@ -10,6 +10,7 @@
 #include "stdlib.h"
 #include "string.h"
 #include "aplication.h"
+#include "fatfs.h"
 
 
 displayConfig Display;
@@ -135,6 +136,35 @@ uint16_t converte4Bytes2uint16(uint8_t *str){
 
 }
 
+
+// 30min logando gera um arquivo de 61KB
+void GravaNMEASDCard(uint8_t *str){
+	static FATFS fs;
+	static FIL fil;
+	uint8_t aux = 0;
+
+	uint8_t *paux = str;
+
+	while(*str != '\n'){
+		str++;
+		aux++;
+		if(aux >= 100)return;
+	}
+	str++;
+	*str = 0;
+
+
+	f_mount(&fs, "", 0);
+	f_open(&fil, "teste1.txt", FA_OPEN_ALWAYS | FA_WRITE | FA_READ);
+	f_lseek(&fil, f_size(&fil));
+	f_puts(paux, &fil);
+	f_close(&fil);
+
+
+
+
+}
+
 void decodeNMEA(uint8_t *str, GNSS *gn){
 	uint8_t *p;
 	uint8_t contVirgulas = 0;
@@ -151,6 +181,7 @@ void decodeNMEA(uint8_t *str, GNSS *gn){
 //GPGSA
 //BDGSV
 	if(str[0] == '$'){
+		GravaNMEASDCard(str);
 		if(str[1] == 'G'){//G
 			if(str[2] == 'N'){//GN
 				if(str[3] == 'V'){//GNV
@@ -169,6 +200,7 @@ void decodeNMEA(uint8_t *str, GNSS *gn){
 								gn->velocidade.velocidadeSTR[2] = *p++;
 								gn->velocidade.velocidadeSTR[3] = *p++;
 								gn->velocidade.velocidadeFloat = converte4Bytes2float(gn->velocidade.velocidadeSTR);
+								gn->velocidade.velocidade8bits = (uint8_t)gn->velocidade.velocidadeFloat;
 
 
 							}

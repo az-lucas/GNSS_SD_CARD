@@ -18,7 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "fatfs.h"
+
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -34,8 +34,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-FATFS fs;
-FIL fil;
+
 
 /* USER CODE END PD */
 
@@ -77,7 +76,7 @@ static void MX_USART1_UART_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	//FRESULT retorno;
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -107,17 +106,10 @@ int main(void)
   Display.configurado = VELOCIDADE;
   initDisplay(&Display);
   HAL_UART_Receive_IT(&huart1, gnss.RxDataSerial, 1);
-/*
-  do{
-	  retorno = f_mount(&fs, "", 0);
-  }while(retorno != FR_OK);
-  do{
-	  retorno = f_open(&fil, "write.txt", FA_OPEN_ALWAYS | FA_WRITE | FA_READ);
-  }while(retorno != FR_OK);
-  retorno = f_lseek(&fil, f_size(&fil));
-  retorno = f_puts("Hello from Nizar\n", &fil);
-  retorno = f_close(&fil);
- */
+
+
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
