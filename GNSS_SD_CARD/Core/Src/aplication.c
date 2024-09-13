@@ -138,14 +138,15 @@ uint16_t converte4Bytes2uint16(uint8_t *str){
 
 
 // 30min logando gera um arquivo de 61KB
-void GravaNMEASDCard(uint8_t *str){
+void GravaNMEASDCard(uint8_t *str, GNSS *gn){
 	static FATFS fs;
 	static FIL fil;
 	uint8_t aux = 0;
+	char nomeArquivo[] = {"dd_mm_yyyy.nmea"};
 
 	uint8_t *paux = str;
 
-	while(*str != '\n'){
+	while(*str != 0x0d){
 		str++;
 		aux++;
 		if(aux >= 100)return;
@@ -153,12 +154,26 @@ void GravaNMEASDCard(uint8_t *str){
 	str++;
 	*str = 0;
 
+	if(gn->data.diaStr[0] >= '0' && gn->data.diaStr[1] > '0' && gn->data.diaStr[0] <= '3' && gn->data.diaStr[1] <= '9'){// verifica se o dia é valido
 
-	f_mount(&fs, "", 0);
-	f_open(&fil, "teste1.txt", FA_OPEN_ALWAYS | FA_WRITE | FA_READ);
-	f_lseek(&fil, f_size(&fil));
-	f_puts(paux, &fil);
-	f_close(&fil);
+		nomeArquivo[0] = gn->data.diaStr[0];
+		nomeArquivo[1] = gn->data.diaStr[1];
+
+		nomeArquivo[3] = gn->data.mesStr[0];
+		nomeArquivo[4] = gn->data.mesStr[1];
+
+		nomeArquivo[6] = gn->data.anoStr[0];
+		nomeArquivo[7] = gn->data.anoStr[1];
+		nomeArquivo[8] = gn->data.anoStr[2];
+		nomeArquivo[9] = gn->data.anoStr[3];
+
+
+		f_mount(&fs, "", 0);
+		f_open(&fil, &nomeArquivo, FA_OPEN_ALWAYS | FA_WRITE | FA_READ);
+		f_lseek(&fil, f_size(&fil));
+		f_puts(paux, &fil);
+		f_close(&fil);
+	}
 
 
 
@@ -181,7 +196,7 @@ void decodeNMEA(uint8_t *str, GNSS *gn){
 //GPGSA
 //BDGSV
 	if(str[0] == '$'){
-		GravaNMEASDCard(str);
+		GravaNMEASDCard(str,gn);
 		if(str[1] == 'G'){//G
 			if(str[2] == 'N'){//GN
 				if(str[3] == 'V'){//GNV
@@ -218,21 +233,22 @@ void decodeNMEA(uint8_t *str, GNSS *gn){
 								gn->data.minutoStr[1] = *p++;
 								gn->data.segundoStr[0] = *p++;
 								gn->data.segundoStr[1] = *p++;
+								p++;//.
+								p++;//s
+								p++;//s
+								p++;//s
+								p++;//,
+								gn->data.diaStr[0] = *p++;
+								gn->data.diaStr[1] = *p++;
+								p++;//,
+								gn->data.mesStr[0] = *p++;
+								gn->data.mesStr[1] = *p++;
+								p++;//,
+								gn->data.anoStr[0] = *p++;
+								gn->data.anoStr[1] = *p++;
+								gn->data.anoStr[2] = *p++;
+								gn->data.anoStr[3] = *p++;
 
-								/*
-								gn->data.horaUTC = converte2Bytes2uint8(p);
-								p++;p++;
-								gn->data.minuto = converte2Bytes2uint8(p);
-								p++;p++;
-								gn->data.segundo = converte2Bytes2uint8(p);
-								p++;p++;
-								p++;p++;p++;p++;p++;
-								gn->data.dia = converte2Bytes2uint8(p);
-								p++;p++;p++;
-								gn->data.mes = converte2Bytes2uint8(p);
-								p++;p++;p++;
-								gn->data.ano = converte4Bytes2uint16(p);
-								*/
 							}
 						}
 					}

@@ -6,6 +6,6 @@
 ../Core/Src/aplication.c:116:7:converte4Bytes2float	16	static
 ../Core/Src/aplication.c:127:9:converte2Bytes2uint8	16	static
 ../Core/Src/aplication.c:133:10:converte4Bytes2uint16	16	static
-../Core/Src/aplication.c:139:6:GravaNMEASDCard	24	static
-../Core/Src/aplication.c:166:6:decodeNMEA	24	static
-../Core/Src/aplication.c:274:6:HAL_UART_RxCpltCallback	24	static
+../Core/Src/aplication.c:141:6:GravaNMEASDCard	48	static
+../Core/Src/aplication.c:183:6:decodeNMEA	24	static
+../Core/Src/aplication.c:292:6:HAL_UART_RxCpltCallback	24	static

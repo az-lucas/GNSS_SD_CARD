@@ -46,7 +46,7 @@ typedef struct{
 		uint8_t segundoStr[2];
 		uint8_t diaStr[2];
 		uint8_t mesStr[2];
-		uint16_t anoStr[4];
+		uint8_t anoStr[4];
 	}data;
 
 	uint8_t numeroSatelitesStr[2];
@@ -69,7 +69,7 @@ float converte4Bytes2float(uint8_t *str);
 uint8_t converte2Bytes2uint8(uint8_t *str);
 uint16_t converte4Bytes2uint16(uint8_t *str);
 
-void GravaNMEASDCard(uint8_t *str);
+void GravaNMEASDCard(uint8_t *str, GNSS *gn);
 
 
 
