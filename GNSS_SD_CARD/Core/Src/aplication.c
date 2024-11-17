@@ -19,7 +19,8 @@ GNSS gnss = {.numeroSatelitesStr[0] = '0', .numeroSatelitesStr[1] = '0',
 				.minutoStr[0] = '0',	.minutoStr[1] = '0',
 				.segundoStr[0] = '0',	.segundoStr[1] = '0'}};
 UART_HandleTypeDef huart1;
-
+ADC_HandleTypeDef hadc1;
+tensaoEntrada tensao;
 
 void initDisplay(displayConfig *disp){
 
@@ -138,7 +139,7 @@ uint16_t converte4Bytes2uint16(uint8_t *str){
 
 
 // 30min logando gera um arquivo de 61KB
-void GravaNMEASDCard(uint8_t *str, GNSS *gn){
+void GravaNMEASDCard(uint8_t *str, GNSS *gn, tensaoEntrada *ts){
 	static FATFS fs;
 	static FIL fil;
 	uint8_t aux = 0;
@@ -167,12 +168,17 @@ void GravaNMEASDCard(uint8_t *str, GNSS *gn){
 		nomeArquivo[8] = gn->data.anoStr[2];
 		nomeArquivo[9] = gn->data.anoStr[3];
 
+		HAL_ADC_PollForConversion(&hadc1,1000);
+		ts->readADC = HAL_ADC_GetValue(&hadc1);
+		//ts->vin = tensao.readADC*11.0*3.3/4095.0;
+		if(tensao.readADC > 1300){// so abre o arquivo para escrever se a alimentacao estive maior que 11,5V
+			f_mount(&fs, "", 0);
+			f_open(&fil, &nomeArquivo, FA_OPEN_ALWAYS | FA_WRITE | FA_READ);
+			f_lseek(&fil, f_size(&fil));
+			f_puts(paux, &fil);
+			f_close(&fil);
+		}
 
-		f_mount(&fs, "", 0);
-		f_open(&fil, &nomeArquivo, FA_OPEN_ALWAYS | FA_WRITE | FA_READ);
-		f_lseek(&fil, f_size(&fil));
-		f_puts(paux, &fil);
-		f_close(&fil);
 	}
 
 
@@ -180,7 +186,7 @@ void GravaNMEASDCard(uint8_t *str, GNSS *gn){
 
 }
 
-void decodeNMEA(uint8_t *str, GNSS *gn){
+void decodeNMEA(uint8_t *str, GNSS *gn, tensaoEntrada *ts){
 	uint8_t *p;
 	uint8_t contVirgulas = 0;
 
@@ -196,7 +202,7 @@ void decodeNMEA(uint8_t *str, GNSS *gn){
 //GPGSA
 //BDGSV
 	if(str[0] == '$'){
-		GravaNMEASDCard(str,gn);
+		GravaNMEASDCard(str,gn,ts);
 		if(str[1] == 'G'){//G
 			if(str[2] == 'N'){//GN
 				if(str[3] == 'V'){//GNV

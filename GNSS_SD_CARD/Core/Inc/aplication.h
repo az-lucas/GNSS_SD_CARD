@@ -54,9 +54,19 @@ typedef struct{
 
 }GNSS;
 
+typedef struct {
+	uint16_t readADC;
+	float vin;
+
+}tensaoEntrada;
+
 extern displayConfig Display;
 extern GNSS gnss;
 extern UART_HandleTypeDef huart1;
+extern ADC_HandleTypeDef hadc1;
+extern tensaoEntrada tensao;
+
+
 
 void initDisplay(displayConfig *disp);
 void updateDisplay(displayConfig *disp, GNSS *gn);
@@ -64,12 +74,12 @@ void updateDisplayNumeroSatelites(displayConfig *disp, GNSS *gn);
 void updateDisplayVelocidade(displayConfig *disp, GNSS *gn);
 void updateDisplayHora(displayConfig *disp, GNSS *gn);
 
-void decodeNMEA(uint8_t *str, GNSS *gn);
+void decodeNMEA(uint8_t *str, GNSS *gn, tensaoEntrada *ts);
 float converte4Bytes2float(uint8_t *str);
 uint8_t converte2Bytes2uint8(uint8_t *str);
 uint16_t converte4Bytes2uint16(uint8_t *str);
 
-void GravaNMEASDCard(uint8_t *str, GNSS *gn);
+void GravaNMEASDCard(uint8_t *str, GNSS *gn, tensaoEntrada *ts);
 
 
 
